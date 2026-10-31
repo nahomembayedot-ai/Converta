@@ -24,6 +24,74 @@ interface FileNode {
 
 const NATIVE_FILES: FileNode[] = [
   {
+    name: 'codemagic.yaml',
+    path: 'codemagic.yaml (Repository Root)',
+    language: 'yaml',
+    content: `# Codemagic CI/CD Configuration for CONVERTA macOS DMG Build
+workflows:
+  macos-converta-dmg:
+    name: Build CONVERTA macOS DMG
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      xcode: latest
+      vars:
+        APP_NAME: "CONVERTA"
+        DMG_NAME: "CONVERTA.dmg"
+    scripts:
+      - name: Environment Diagnostics
+        script: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+
+      - name: Auto-Detect Project, Workspace & Schemes
+        script: |
+          WORKSPACE_PATH=$(find . -name "*.xcworkspace" -not -path "*/DerivedData/*" -not -path "*/node_modules/*" -not -path "*.xcodeproj/*" | head -n 1 || true)
+          PROJECT_PATH=$(find . -name "*.xcodeproj" -not -path "*/DerivedData/*" -not -path "*/node_modules/*" | head -n 1 || true)
+          if [ -n "$WORKSPACE_PATH" ]; then
+            BUILD_CONTAINER_ARG="-workspace $WORKSPACE_PATH"
+          else
+            BUILD_CONTAINER_ARG="-project $PROJECT_PATH"
+          fi
+          SCHEME="Converta"
+          echo "BUILD_CONTAINER_ARG=$BUILD_CONTAINER_ARG" >> $CM_ENV
+          echo "DETECTED_SCHEME=$SCHEME" >> $CM_ENV
+
+      - name: Build Native macOS Application (Release)
+        script: |
+          xcodebuild $BUILD_CONTAINER_ARG \\
+            -scheme "$DETECTED_SCHEME" \\
+            -configuration Release \\
+            -destination "platform=macOS,arch=arm64" \\
+            -derivedDataPath "./build/DerivedData" \\
+            CODE_SIGNING_ALLOWED=NO \\
+            CODE_SIGN_IDENTITY="" \\
+            CODE_SIGNING_REQUIRED=NO \\
+            build
+
+      - name: Package Standalone CONVERTA.dmg
+        script: |
+          APP_BUNDLE=$(find ./build/DerivedData -name "*.app" -type d | head -n 1)
+          mkdir -p ./build/dmg_staging
+          cp -R "$APP_BUNDLE" ./build/dmg_staging/CONVERTA.app
+          ln -s /Applications ./build/dmg_staging/Applications
+          hdiutil create -volname "CONVERTA" -srcfolder ./build/dmg_staging -ov -format UDZO ./build/CONVERTA.dmg
+
+      - name: Verify DMG Integrity & Mount Test
+        script: |
+          stat -f%z ./build/CONVERTA.dmg
+          MOUNT_INFO=$(hdiutil attach -nobrowse -readonly ./build/CONVERTA.dmg)
+          MOUNT_PT=$(echo "$MOUNT_INFO" | grep "/Volumes/" | awk -F'\\t' '{print $NF}' | xargs)
+          ls -la "$MOUNT_PT"
+          hdiutil detach "$MOUNT_PT" -force
+
+    artifacts:
+      - build/*.dmg
+      - "*.dmg"
+      - /tmp/xcodebuild.log`,
+  },
+  {
     name: 'ConvertaApp.swift',
     path: 'Converta/App/ConvertaApp.swift',
     language: 'swift',
@@ -267,12 +335,12 @@ export const XcodeProjectViewer: React.FC = () => {
         {/* 1-Click Direct Downloads */}
         <div className="flex items-center space-x-2.5">
           <a
-            href="/Converta.dmg"
-            download="Converta.dmg"
+            href="/CONVERTA.dmg"
+            download="CONVERTA.dmg"
             className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:brightness-110 active:scale-95 text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition-all"
           >
             <Download className="w-4 h-4" />
-            <span>Download Converta.dmg</span>
+            <span>Download CONVERTA.dmg</span>
           </a>
 
           <a

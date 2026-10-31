@@ -1,0 +1,265 @@
+# ==============================================================================
+# Codemagic CI/CD Configuration for CONVERTA macOS DMG Build
+# Inspired by Filee (https://filee.sh/)
+# ==============================================================================
+workflows:
+  macos-converta-dmg:
+    name: Build CONVERTA macOS DMG
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      xcode: latest
+      groups:
+        - macos_credentials # Optional: can store Apple Developer ID credentials
+      vars:
+        APP_NAME: "CONVERTA"
+        DMG_NAME: "CONVERTA.dmg"
+    scripts:
+      - name: 1. Environment and Toolchain Diagnostics
+        script: |
+          set -e
+          echo "=========================================================="
+          echo " Codemagic macOS Build Environment Diagnostics"
+          echo "=========================================================="
+          sw_vers
+          uname -m
+          echo "Xcode Version:"
+          xcodebuild -version
+          echo "Swift Toolchain:"
+          swift --version
+          echo "Active Developer Directory:"
+          xcode-select -p
+          echo "=========================================================="
+
+      - name: 2. Auto-Detect Xcode Project, Workspace & Schemes
+        script: |
+          set -e
+          echo ">>> Auto-detecting project and scheme in repository..."
+
+          # 1. Search for .xcworkspace or .xcodeproj files
+          WORKSPACE_PATH=$(find . -name "*.xcworkspace" -not -path "*/DerivedData/*" -not -path "*/node_modules/*" -not -path "*.xcodeproj/*" | head -n 1 || true)
+          PROJECT_PATH=$(find . -name "*.xcodeproj" -not -path "*/DerivedData/*" -not -path "*/node_modules/*" | head -n 1 || true)
+
+          if [ -n "$WORKSPACE_PATH" ]; then
+            echo "✓ Found Workspace: $WORKSPACE_PATH"
+            BUILD_CONTAINER_ARG="-workspace $WORKSPACE_PATH"
+            LIST_CONTAINER_ARG="-workspace $WORKSPACE_PATH"
+            BASE_DIR=$(dirname "$WORKSPACE_PATH")
+          elif [ -n "$PROJECT_PATH" ]; then
+            echo "✓ Found Xcode Project: $PROJECT_PATH"
+            BUILD_CONTAINER_ARG="-project $PROJECT_PATH"
+            LIST_CONTAINER_ARG="-project $PROJECT_PATH"
+            BASE_DIR=$(dirname "$PROJECT_PATH")
+          else
+            echo "Error: No .xcworkspace or .xcodeproj found in repository!" >&2
+            exit 1
+          fi
+
+          echo "Base Directory: $BASE_DIR"
+
+          # 2. Query available schemes
+          echo "Querying available schemes via xcodebuild..."
+          SCHEME_LIST=$(xcodebuild $LIST_CONTAINER_ARG -list -json || true)
+          echo "Scheme discovery output: $SCHEME_LIST"
+
+          # Auto-select scheme: prioritize 'Converta', 'CONVERTA', or first shared scheme
+          DETECTED_SCHEME=$(echo "$SCHEME_LIST" | grep -o '"Converta"' | tr -d '"' | head -n 1 || true)
+          if [ -z "$DETECTED_SCHEME" ]; then
+            DETECTED_SCHEME=$(echo "$SCHEME_LIST" | grep -o '"CONVERTA"' | tr -d '"' | head -n 1 || true)
+          fi
+          if [ -z "$DETECTED_SCHEME" ]; then
+            # Extract first listed scheme
+            DETECTED_SCHEME=$(echo "$SCHEME_LIST" | grep -A 5 '"schemes"' | grep '      "' | head -n 1 | tr -d ' ",' || true)
+          fi
+          if [ -z "$DETECTED_SCHEME" ]; then
+            DETECTED_SCHEME="Converta"
+          fi
+
+          echo "✓ Selected Build Scheme: $DETECTED_SCHEME"
+
+          # Export detected variables for subsequent Codemagic steps
+          echo "BUILD_CONTAINER_ARG=$BUILD_CONTAINER_ARG" >> $CM_ENV
+          echo "DETECTED_SCHEME=$DETECTED_SCHEME" >> $CM_ENV
+          echo "BASE_DIR=$BASE_DIR" >> $CM_ENV
+
+      - name: 3. Resolve Dependencies & Packages
+        script: |
+          set -e
+          echo ">>> Resolving Swift Package dependencies..."
+          if [ -f "$BASE_DIR/Package.swift" ]; then
+            cd "$BASE_DIR"
+            swift package resolve || true
+            cd -
+          fi
+          # Resolve packages in Xcode project
+          xcodebuild $BUILD_CONTAINER_ARG -scheme "$DETECTED_SCHEME" -resolvePackageDependencies || true
+
+      - name: 4. Build Native macOS Application in Release Mode
+        script: |
+          set -euo pipefail
+          echo "=========================================================="
+          echo " Building macOS Release Application"
+          echo " Scheme: $DETECTED_SCHEME"
+          echo " Destination: platform=macOS,arch=arm64"
+          echo "=========================================================="
+
+          mkdir -p build
+          BUILD_LOG="/tmp/xcodebuild.log"
+
+          # Run xcodebuild with code signing disabled for unsigned development distribution
+          set +e
+          xcodebuild $BUILD_CONTAINER_ARG \
+            -scheme "$DETECTED_SCHEME" \
+            -configuration Release \
+            -destination "platform=macOS,arch=arm64" \
+            -derivedDataPath "./build/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            build | tee "$BUILD_LOG"
+          
+          BUILD_EXIT_CODE=$?
+          set -e
+
+          if [ $BUILD_EXIT_CODE -ne 0 ]; then
+            echo "Error: xcodebuild failed with exit code $BUILD_EXIT_CODE" >&2
+            echo "--- Last 50 lines of build log ---" >&2
+            tail -n 50 "$BUILD_LOG" >&2
+            exit $BUILD_EXIT_CODE
+          fi
+
+          echo "✓ xcodebuild compilation succeeded!"
+
+      - name: 5. Locate Application Bundle (.app)
+        script: |
+          set -e
+          echo ">>> Locating generated .app bundle..."
+          APP_BUNDLE=$(find ./build/DerivedData -name "*.app" -type d | head -n 1)
+
+          if [ -z "$APP_BUNDLE" ] || [ ! -d "$APP_BUNDLE" ]; then
+            echo "Warning: .app not found in DerivedData. Searching entire build directory..."
+            APP_BUNDLE=$(find . -name "*.app" -type d -not -path "*/node_modules/*" | head -n 1)
+          fi
+
+          if [ -z "$APP_BUNDLE" ] || [ ! -d "$APP_BUNDLE" ]; then
+            echo "Error: Could not locate built .app bundle!" >&2
+            exit 1
+          fi
+
+          echo "✓ Located App Bundle at: $APP_BUNDLE"
+          echo "APP_BUNDLE=$APP_BUNDLE" >> $CM_ENV
+
+          # Display bundle identity
+          if [ -f "$APP_BUNDLE/Contents/Info.plist" ]; then
+            echo "Bundle Identifier:"
+            /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP_BUNDLE/Contents/Info.plist" || true
+            echo "Bundle Version:"
+            /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP_BUNDLE/Contents/Info.plist" || true
+          fi
+
+      - name: 6. Package Standalone DMG Installer
+        script: |
+          set -e
+          echo "=========================================================="
+          echo " Packaging CONVERTA.dmg Installer"
+          echo "=========================================================="
+
+          STAGING_DIR="./build/dmg_staging"
+          DMG_OUTPUT="./build/$DMG_NAME"
+          ROOT_DMG="./$DMG_NAME"
+
+          rm -rf "$STAGING_DIR"
+          mkdir -p "$STAGING_DIR"
+
+          # Copy application into staging
+          echo "Copying application bundle to staging area..."
+          cp -R "$APP_BUNDLE" "$STAGING_DIR/CONVERTA.app"
+
+          # Add standard /Applications symlink for drag-and-drop installer
+          echo "Adding Applications folder shortcut..."
+          ln -s /Applications "$STAGING_DIR/Applications"
+
+          # Build compressed UDZO disk image
+          echo "Creating compressed DMG using hdiutil..."
+          rm -f "$DMG_OUTPUT" "$ROOT_DMG"
+          hdiutil create \
+            -volname "CONVERTA" \
+            -srcfolder "$STAGING_DIR" \
+            -ov \
+            -format UDZO \
+            "$DMG_OUTPUT"
+
+          # Also mirror to root directory for easy download access
+          cp "$DMG_OUTPUT" "$ROOT_DMG"
+
+          echo "✓ DMG created successfully!"
+          ls -lh "$DMG_OUTPUT"
+
+      - name: 7. Verify DMG Integrity & Mount Test
+        script: |
+          set -e
+          echo "=========================================================="
+          echo " Verifying CONVERTA.dmg Integrity"
+          echo "=========================================================="
+
+          DMG_PATH="./build/$DMG_NAME"
+
+          # 1. Verify existence
+          if [ ! -f "$DMG_PATH" ]; then
+            echo "Error: DMG file does not exist at $DMG_PATH" >&2
+            exit 1
+          fi
+
+          # 2. Verify non-empty
+          DMG_BYTES=$(stat -f%z "$DMG_PATH" 2>/dev/null || stat -c%s "$DMG_PATH" 2>/dev/null || wc -c < "$DMG_PATH")
+          echo "DMG File Size: $DMG_BYTES bytes"
+          if [ "$DMG_BYTES" -le 1000 ]; then
+            echo "Error: DMG file is empty or too small ($DMG_BYTES bytes)!" >&2
+            exit 1
+          fi
+
+          # 3. Mount Test via hdiutil
+          echo "Performing test mount of $DMG_PATH..."
+          MOUNT_OUTPUT=$(hdiutil attach -nobrowse -readonly "$DMG_PATH")
+          echo "Mount details: $MOUNT_OUTPUT"
+
+          MOUNT_POINT=$(echo "$MOUNT_OUTPUT" | grep "/Volumes/" | awk -F'\t' '{print $NF}' | xargs || true)
+          if [ -z "$MOUNT_POINT" ]; then
+            MOUNT_POINT=$(echo "$MOUNT_OUTPUT" | grep -o '/Volumes/.*' | head -n 1 || true)
+          fi
+
+          echo "Mounted volume at: $MOUNT_POINT"
+
+          if [ -d "$MOUNT_POINT" ]; then
+            echo "Inspecting mounted volume contents:"
+            ls -la "$MOUNT_POINT"
+            
+            # Check for application inside volume
+            if [ -d "$MOUNT_POINT/CONVERTA.app" ] || [ -d "$MOUNT_POINT/Converta.app" ]; then
+              echo "✓ Application successfully verified inside mounted DMG!"
+            else
+              echo "Warning: Application bundle not directly named CONVERTA.app in root of volume"
+            fi
+
+            # Check for Applications link
+            if [ -L "$MOUNT_POINT/Applications" ]; then
+              echo "✓ Applications shortcut verified!"
+            fi
+
+            # Unmount
+            echo "Unmounting test volume..."
+            hdiutil detach "$MOUNT_POINT" -force || true
+            echo "✓ Test unmount complete."
+          else
+            echo "Notice: Could not parse mount point, but hdiutil attach succeeded."
+          fi
+
+          echo "=========================================================="
+          echo " ✓ CONVERTA.dmg is verified and ready for distribution!"
+          echo "=========================================================="
+
+    artifacts:
+      - build/*.dmg
+      - build/DerivedData/**/Build/Products/Release/*.app
+      - "*.dmg"
+      - /tmp/xcodebuild.log

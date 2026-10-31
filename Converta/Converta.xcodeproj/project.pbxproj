@@ -32,29 +32,29 @@
 
 /* Begin PBXFileReference section */
 		AA00000129B0000100000001 /* Converta.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Converta.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA02000129B0000100000001 /* ConvertaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvertaApp.swift; sourceTree = "<group>"; };
-		AA02000229B0000100000002 /* MainContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainContentView.swift; sourceTree = "<group>"; };
-		AA02000329B0000100000003 /* RadialWheelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadialWheelView.swift; sourceTree = "<group>"; };
-		AA02000429B0000100000004 /* WheelSegmentShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WheelSegmentShape.swift; sourceTree = "<group>"; };
-		AA02000529B0000100000005 /* FormatOrbRingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatOrbRingView.swift; sourceTree = "<group>"; };
-		AA02000629B0000100000006 /* ConversionProgressSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionProgressSheet.swift; sourceTree = "<group>"; };
-		AA02000729B0000100000007 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
-		AA02000829B0000100000008 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		AA02000929B0000100000009 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
-		AA02001029B0000100000010 /* FileCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCategory.swift; sourceTree = "<group>"; };
-		AA02001129B0000100000011 /* FileType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileType.swift; sourceTree = "<group>"; };
-		AA02001229B0000100000012 /* ConversionSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionSettings.swift; sourceTree = "<group>"; };
-		AA02001329B0000100000013 /* ConversionJob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionJob.swift; sourceTree = "<group>"; };
-		AA02001429B0000100000014 /* FileDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDetectionService.swift; sourceTree = "<group>"; };
-		AA02001529B0000100000015 /* ConversionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionManager.swift; sourceTree = "<group>"; };
-		AA02001629B0000100000016 /* ImageConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageConverter.swift; sourceTree = "<group>"; };
-		AA02001729B0000100000017 /* PDFConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFConverter.swift; sourceTree = "<group>"; };
-		AA02001829B0000100000018 /* VideoConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoConverter.swift; sourceTree = "<group>"; };
-		AA02001929B0000100000019 /* AudioConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioConverter.swift; sourceTree = "<group>"; };
-		AA02002029B0000100000020 /* DocumentConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentConverter.swift; sourceTree = "<group>"; };
-		AA02002129B0000100000021 /* ArchiveConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveConverter.swift; sourceTree = "<group>"; };
-		AA02002229B0000100000022 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AA02002329B0000100000023 /* Converta.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Converta.entitlements; sourceTree = "<group>"; };
+		AA02000129B0000100000001 /* ConvertaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "App/ConvertaApp.swift"; sourceTree = "<group>"; };
+		AA02000229B0000100000002 /* MainContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/MainContentView.swift"; sourceTree = "<group>"; };
+		AA02000329B0000100000003 /* RadialWheelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Wheel/RadialWheelView.swift"; sourceTree = "<group>"; };
+		AA02000429B0000100000004 /* WheelSegmentShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Wheel/WheelSegmentShape.swift"; sourceTree = "<group>"; };
+		AA02000529B0000100000005 /* FormatOrbRingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Wheel/FormatOrbRingView.swift"; sourceTree = "<group>"; };
+		AA02000629B0000100000006 /* ConversionProgressSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/ConversionProgressSheet.swift"; sourceTree = "<group>"; };
+		AA02000729B0000100000007 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/HistoryView.swift"; sourceTree = "<group>"; };
+		AA02000829B0000100000008 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/SettingsView.swift"; sourceTree = "<group>"; };
+		AA02000929B0000100000009 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/AboutView.swift"; sourceTree = "<group>"; };
+		AA02001029B0000100000010 /* FileCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/FileCategory.swift"; sourceTree = "<group>"; };
+		AA02001129B0000100000011 /* FileType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/FileType.swift"; sourceTree = "<group>"; };
+		AA02001229B0000100000012 /* ConversionSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/ConversionSettings.swift"; sourceTree = "<group>"; };
+		AA02001329B0000100000013 /* ConversionJob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/ConversionJob.swift"; sourceTree = "<group>"; };
+		AA02001429B0000100000014 /* FileDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/FileDetectionService.swift"; sourceTree = "<group>"; };
+		AA02001529B0000100000015 /* ConversionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/ConversionManager.swift"; sourceTree = "<group>"; };
+		AA02001629B0000100000016 /* ImageConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Converters/ImageConverter/ImageConverter.swift"; sourceTree = "<group>"; };
+		AA02001729B0000100000017 /* PDFConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Converters/PDFConverter/PDFConverter.swift"; sourceTree = "<group>"; };
+		AA02001829B0000100000018 /* VideoConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Converters/VideoConverter/VideoConverter.swift"; sourceTree = "<group>"; };
+		AA02001929B0000100000019 /* AudioConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Converters/AudioConverter/AudioConverter.swift"; sourceTree = "<group>"; };
+		AA02002029B0000100000020 /* DocumentConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Converters/DocumentConverter/DocumentConverter.swift"; sourceTree = "<group>"; };
+		AA02002129B0000100000021 /* ArchiveConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Converters/ArchiveConverter/ArchiveConverter.swift"; sourceTree = "<group>"; };
+		AA02002229B0000100000022 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Resources/Info.plist"; sourceTree = "<group>"; };
+		AA02002329B0000100000023 /* Converta.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Resources/Converta.entitlements"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
