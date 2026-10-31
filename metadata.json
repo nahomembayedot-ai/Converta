@@ -1,0 +1,6 @@
+{
+  "name": "Converta",
+  "description": "Fast, efficient and private macOS file format converter with an interactive circular radial wheel interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
